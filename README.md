@@ -47,5 +47,5 @@ python script.py sample.inf
 This project is licensed under the MIT License.
 
 ## Author
-Your Name
+Joseph KANKO
 
