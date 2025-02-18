@@ -1,7 +1,7 @@
 # Canary Token Detector
 
 ## Description
-This Python project is designed to detect Canarytoken URLs in various file types, including `.inf` files. It scans files for specific Canarytoken patterns and alerts the user if any are found.
+This Python project is designed to detect Canarytoken URLs in various file types, including `.ini` files. It scans files for specific Canarytoken patterns and alerts the user if any are found.
 
 ## Features
 - Reads and scans files for embedded Canarytoken URLs.
