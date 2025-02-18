@@ -5,7 +5,6 @@ This Python project is designed to detect Canarytoken URLs in various file types
 
 ## Features
 - Reads and scans files for embedded Canarytoken URLs.
-- Supports multiple file types (e.g., `.inf`, `.log`, `.txt`, etc.).
 - Uses regex to detect Canarytokens.
 - Provides a simple command-line interface for easy usage.
 
