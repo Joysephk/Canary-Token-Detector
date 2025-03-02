@@ -1,15 +1,14 @@
 import re
 import sys
 import os
+import zipfile
 from colorama import Fore, Style, init
 
 # Initialize colorama
 init(autoreset=True)
 
 def extract_canarytokens_from_ini(file_path):
-    """
-    Extracts and prints Canarytoken URLs from a .ini file.
-    """
+    """Extracts and prints Canarytoken URLs from a .ini file."""
     pattern = re.compile(r"\\%USERNAME%\.%COMPUTERNAME%\.%USERDOMAIN%\.INI\.\w+\.canarytokens\.com\\resource\.dll")
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
@@ -27,9 +26,7 @@ def extract_canarytokens_from_ini(file_path):
         print(Fore.RED + f"[!] An error occurred while processing INI file: {e}")
 
 def detect_canarytokens_in_reg(file_path):
-    """
-    Detects occurrences of '.canarytokens.com' in a .reg file.
-    """
+    """Detects occurrences of '.canarytokens.com' in a .reg file."""
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
             content = file.read()
@@ -41,6 +38,34 @@ def detect_canarytokens_in_reg(file_path):
         print(Fore.RED + "[!] REG file not found. Check the file path.")
     except Exception as e:
         print(Fore.RED + f"[!] An error occurred while processing REG file: {e}")
+
+def extract_canarytokens_from_xlsx(file_path):
+    """Extract and detect canary tokens inside the xl/drawings/_rels/ folder in an xlsx file."""
+    canary_pattern = re.compile(r'http://canarytokens\.com[^\s]*')
+
+    try:
+        with zipfile.ZipFile(file_path, 'r') as xlsx_zip:
+            file_list = xlsx_zip.namelist()
+            rels_files = [f for f in file_list if f.startswith('xl/drawings/_rels/')]
+
+            concatenated_content = ''
+            for rels_file in rels_files:
+                with xlsx_zip.open(rels_file) as file:
+                    content = file.read().decode('utf-8', errors='ignore')
+                    concatenated_content += content
+
+            matches = canary_pattern.findall(concatenated_content)
+            if matches:
+                print(Fore.GREEN + f"[+] Detected Canarytokens URLs in '{file_path}':")
+                for match in matches:
+                    print(Fore.YELLOW + f"    {match}")
+            else:
+                print(Fore.RED + f"[-] No Canarytokens URLs found in '{file_path}'.")
+
+    except zipfile.BadZipFile:
+        print(Fore.RED + f"[!] The file '{file_path}' is not a valid .xlsx file or is corrupted.")
+    except Exception as e:
+        print(Fore.RED + f"[!] An error occurred while processing '{file_path}': {e}")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -57,5 +82,7 @@ if __name__ == "__main__":
         extract_canarytokens_from_ini(file_path)
     elif file_extension.lower() == '.reg':
         detect_canarytokens_in_reg(file_path)
+    elif file_extension.lower() == '.xlsx':
+        extract_canarytokens_from_xlsx(file_path)
     else:
-        print(Fore.RED + "[!] Unsupported file type. Please provide a .ini or .reg file.")
+        print(Fore.RED + "[!] Unsupported file type. Please provide a .ini, .reg, or .xlsx file.")
