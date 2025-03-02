@@ -67,6 +67,34 @@ def extract_canarytokens_from_xlsx(file_path):
     except Exception as e:
         print(Fore.RED + f"[!] An error occurred while processing '{file_path}': {e}")
 
+def extract_canarytokens_from_docx(file_path):
+    """Extract and detect canary tokens inside the word/_rels/ folder in a .docx file."""
+    canary_pattern = re.compile(r'http://canarytokens\.com[^\s]*')
+
+    try:
+        with zipfile.ZipFile(file_path, 'r') as docx_zip:
+            file_list = docx_zip.namelist()
+            rels_files = [f for f in file_list if f.startswith('word/_rels/')]
+
+            concatenated_content = ''
+            for rels_file in rels_files:
+                with docx_zip.open(rels_file) as file:
+                    content = file.read().decode('utf-8', errors='ignore')
+                    concatenated_content += content
+
+            matches = canary_pattern.findall(concatenated_content)
+            if matches:
+                print(Fore.GREEN + f"[+] Detected Canarytokens URLs in '{file_path}':")
+                for match in matches:
+                    print(Fore.YELLOW + f"    {match}")
+            else:
+                print(Fore.RED + f"[-] No Canarytokens URLs found in '{file_path}'.")
+
+    except zipfile.BadZipFile:
+        print(Fore.RED + f"[!] The file '{file_path}' is not a valid .docx file or is corrupted.")
+    except Exception as e:
+        print(Fore.RED + f"[!] An error occurred while processing '{file_path}': {e}")
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print(Fore.CYAN + "Usage: python main.py <path_to_file>")
@@ -84,5 +112,7 @@ if __name__ == "__main__":
         detect_canarytokens_in_reg(file_path)
     elif file_extension.lower() == '.xlsx':
         extract_canarytokens_from_xlsx(file_path)
+    elif file_extension.lower() == '.docx':
+        extract_canarytokens_from_docx(file_path)
     else:
-        print(Fore.RED + "[!] Unsupported file type. Please provide a .ini, .reg, or .xlsx file.")
+        print(Fore.RED + "[!] Unsupported file type. Please provide a .ini, .reg, .xlsx, or .docx file.")
